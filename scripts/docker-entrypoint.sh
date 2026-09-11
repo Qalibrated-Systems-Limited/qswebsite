@@ -24,6 +24,7 @@ sed -i "s|__NEXT_PUBLIC_ASSETS_URL__|${NEXT_PUBLIC_ASSETS_URL:-http://localhost:
 echo "Configuration updated:"
 cat "$CONFIG_FILE"
 
-# Start the Next.js application
+# Start the Next.js standalone server (output: "standalone" emits server.js;
+# `npm start` / `next start` do not work with a standalone build).
 echo "Starting Next.js server..."
-exec npm start
+exec node server.js
