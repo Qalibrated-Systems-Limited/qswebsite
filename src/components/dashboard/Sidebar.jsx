@@ -6,6 +6,9 @@ const Sidebar = ({ selectedView, setSelectedView }) => {
   const menuItems = [
     { key: "analytics", label: "Analytics" },
     { key: "products", label: "Products" },
+    { key: "announcements", label: "Announcements" },
+    { key: "careers", label: "Careers" },
+    { key: "ads", label: "Ads & Promotions" },
     { key: "users", label: "Users" },
     { key: "profile", label: "My Profile" },
   ];

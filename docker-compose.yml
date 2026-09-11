@@ -1,22 +1,50 @@
-version: '3.8'
+# Full Qalibrated website stack — cleanly separated frontend + backend.
+#
+#   frontend  → Next.js marketing site + admin dashboard (this repo root)
+#   backend   → Express + Prisma content API (./backend): auth, products,
+#               announcements, ads, careers, users. SQLite persisted in a volume.
+#
+# Local:      docker compose up -d --build   → site on :3000, API on :5000
+# Production: set NEXT_PUBLIC_API_BASE_URL to the public API URL (e.g.
+#             https://api.qalibrated.co.ke/api) and front both services with
+#             your gateway/reverse proxy. NEXT_PUBLIC_* are read by the browser,
+#             so they must be URLs the visitor's browser can reach.
 
 services:
-  nextjs-app:
-    build: .
-    ports:
-      - "3000:3000"
+  backend:
+    build: ./backend
     environment:
-      # These can be overridden by .env file or runtime
-      - NEXT_PUBLIC_API_BASE_URL=https://api.qalibrated.co.ke/api
-      - NEXT_PUBLIC_SITE_URL=https://qalibrated.co.ke
-      - NEXT_PUBLIC_ASSETS_URL=https://qalibrated.co.ke
-      - NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=your-google-verification-code
-    # Optional: Mount config as volume for runtime updates
-    # volumes:
-    #   - ./config/production-config.js:/app/public/config.js
+      - DATABASE_URL=file:/app/data/qalibrated.db
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-a-long-random-string}
+      - PORT=5000
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - backend_data:/app/data
+      - backend_uploads:/app/uploads
+    ports:
+      - "5000:5000"
     restart: unless-stopped
     networks:
       - app-network
+
+  frontend:
+    build: .
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000/api}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_ASSETS_URL=${NEXT_PUBLIC_ASSETS_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  backend_data:
+  backend_uploads:
 
 networks:
   app-network:
