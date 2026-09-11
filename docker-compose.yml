@@ -22,7 +22,7 @@ services:
       - backend_data:/app/data
       - backend_uploads:/app/uploads
     ports:
-      - "5000:5000"
+      - "5050:5000"
     restart: unless-stopped
     networks:
       - app-network
@@ -32,7 +32,7 @@ services:
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000/api}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5050/api}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       - NEXT_PUBLIC_ASSETS_URL=${NEXT_PUBLIC_ASSETS_URL:-http://localhost:3000}
       - NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}

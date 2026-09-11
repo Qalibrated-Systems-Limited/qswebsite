@@ -108,12 +108,13 @@ function Navbar() {
   return (
     <header className="fixed top-0 left-0 w-full z-50">
       {/* Top Info Bar */}
-      <div className="bg-amber-400 text-xs text-black px-4 py-2 flex justify-between items-center overflow-x-auto">
-        <div className="flex gap-4 items-center">
-          <span className="flex items-center gap-1 min-w-fit"><MapPin size={14} /> QSL centre 1st Floor, Nairobi</span>
-          <span className="flex items-center gap-1 min-w-fit"><Phone size={14} /> +254714999996/+254756999996</span>
-          <span className="flex items-center gap-1 min-w-fit"><Mail size={14} /> info@qalibrated.co.ke</span>
-          <span className="flex items-center gap-1 min-w-fit"><Home size={14} /> P.O BOX 34463-00100</span>
+      <div className="bg-amber-400 text-xs text-black px-4 py-2 flex justify-between items-center">
+        <div className="flex gap-x-4 gap-y-1 items-center flex-wrap">
+          <a href="https://maps.app.goo.gl/2rikDzRuM2bgw6ZV8" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 min-w-fit hover:underline"><MapPin size={14} /> QSL Centre, off Mombasa Road, Nairobi</a>
+          <a href="tel:+254714999996" className="flex items-center gap-1 min-w-fit hover:underline"><Phone size={14} /> +254 714 999 996</a>
+          <a href="tel:+254756999996" className="hidden md:flex items-center gap-1 min-w-fit hover:underline">+254 756 999 996</a>
+          <a href="mailto:info@qalibrated.com" className="flex items-center gap-1 min-w-fit hover:underline"><Mail size={14} /> info@qalibrated.com</a>
+          <span className="hidden lg:flex items-center gap-1 min-w-fit"><Home size={14} /> P.O BOX 34463-00100</span>
         </div>
         {/* <div className="hidden md:flex gap-4 items-center text-sm">
           <Link href="/login" className="flex items-center gap-1 hover:text-white"><LogIn size={14} /> Dashboard</Link>
@@ -121,13 +122,13 @@ function Navbar() {
       </div>
 
       {/* Main Nav */}
-      <nav className="bg-white shadow py-4 px-6 flex items-center justify-between relative z-40">
-        <Link href="/" className="flex items-center gap-2">
-          <img src={logo.src} alt="QSL Logo" className="h-10 w-auto" />
+      <nav className="bg-white shadow py-4 px-4 sm:px-6 flex items-center justify-between gap-x-4 relative z-40">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <img src={logo.src} alt="QSL Logo" className="h-9 md:h-10 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex gap-6 items-center font-bold tracking-wide text-black text-lg">
+        <div className="hidden xl:flex gap-x-4 2xl:gap-x-6 items-center font-semibold text-black text-[15px] 2xl:text-lg">
           {navItems.map((item, index) => (
             <div
               key={index}
@@ -137,19 +138,19 @@ function Navbar() {
             >
               {item.dropdown ? (
                 <button
-                  className="hover:text-amber-400 hover:underline underline-offset-4 flex items-center font-bold"
+                  className="hover:text-amber-500 hover:underline underline-offset-4 flex items-center whitespace-nowrap"
                   onClick={(e) => {
                     e.preventDefault();
                     handleDropdownToggle(item.setDropdownState, item.dropdownState);
                   }}
                 >
                   {item.name}
-                  {item.dropdown && <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200 group-hover:rotate-180" />}
+                  {item.dropdown && <ChevronDown className="h-4 w-4 ml-0.5 transition-transform duration-200 group-hover:rotate-180" />}
                 </button>
               ) : (
                 <Link
                   href={item.path}
-                  className="hover:text-amber-400 hover:underline underline-offset-4 flex items-center font-bold"
+                  className="hover:text-amber-500 hover:underline underline-offset-4 flex items-center whitespace-nowrap"
                 >
                   {item.name}
                 </Link>
@@ -173,21 +174,26 @@ function Navbar() {
               )}
             </div>
           ))}
-          <Link href="/dashboard" className="ml-4 px-4 py-2 bg-amber-400 text-black rounded-full font-bold hover:opacity-90 transition">
+          <Link href="/dashboard" className="ml-1 px-4 py-2 bg-amber-400 text-black rounded-full font-bold text-sm 2xl:text-base whitespace-nowrap hover:opacity-90 transition shrink-0">
             Get Started
           </Link>
         </div>
 
-        {/* Hamburger Menu for Mobile */}
-        <div className="md:hidden">
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-black focus:outline-none">
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        {/* Hamburger Menu for Mobile / tablet */}
+        <div className="xl:hidden">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-black focus:outline-none p-1"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="absolute top-full left-0 w-full bg-white shadow-lg md:hidden z-50">
+          <div className="absolute top-full left-0 w-full bg-white shadow-lg xl:hidden z-50 max-h-[80vh] overflow-y-auto">
             <div className="flex flex-col items-start p-6 space-y-4">
               {navItems.map((item, index) => (
                 <div key={index} className="w-full">
