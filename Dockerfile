@@ -51,5 +51,7 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Use entrypoint script for runtime configuration
-ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
+# Use entrypoint script for runtime configuration. Invoke via `sh` so it runs
+# regardless of the file's execute bit, and without needing bash (node:alpine
+# ships busybox sh only). The script is POSIX-sh compatible.
+ENTRYPOINT ["sh", "./scripts/docker-entrypoint.sh"]
