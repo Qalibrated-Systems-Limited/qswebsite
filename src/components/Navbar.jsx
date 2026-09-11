@@ -75,6 +75,8 @@ function Navbar() {
       setDropdownState: setAutomationDropdownOpen,
     },
     { name: 'Catalogue', path: '/catalogue' },
+    { name: 'Announcements', path: '/announcements' },
+    { name: 'Careers', path: '/careers' },
     { name: 'Contact', path: '/contact' },
   ];
 

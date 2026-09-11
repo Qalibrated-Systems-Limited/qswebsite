@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+# SQLite database files (never commit data)
+data/*.db
+data/*.db-journal
+*.db
+*.db-journal
+# uploaded media (runtime content, kept in a volume in production)
+uploads/*
+!uploads/.gitkeep

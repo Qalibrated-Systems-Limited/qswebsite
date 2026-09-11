@@ -1,0 +1,13 @@
+# Frontend build context (repo root). Keep the backend and heavy/dev files out
+# of the frontend image — the backend is a separate service with its own build.
+node_modules
+.next
+out
+build
+.git
+backend
+*.log
+npm-debug.log*
+.env*
+.DS_Store
+coverage
