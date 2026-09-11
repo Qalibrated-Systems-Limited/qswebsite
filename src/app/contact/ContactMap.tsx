@@ -45,7 +45,7 @@ export default function ContactMap({ isMobile }: ContactMapProps) {
   const navigateUrl = `https://www.google.com/maps/dir/?api=1&destination=${position[0]},${position[1]}`;
   
   return (
-    <div className="h-[500px] md:h-[500px] rounded-2xl shadow-lg overflow-hidden border-2 border-amber-400">
+    <div className="h-[450px] md:h-[620px] w-full rounded-2xl shadow-lg overflow-hidden border-2 border-amber-400">
       <MapContainer center={position} zoom={17} scrollWheelZoom={!isMobile} zoomControl={false} className="h-full w-full">
         <FixMapSize />
         <TileLayer

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { productsAPI } from '@/utils/apiFactory';
+import { productsAPI, imageUrl } from '@/utils/apiFactory';
 
 // Utility function to shuffle an array
 const shuffleArray = (array) => {
@@ -37,15 +37,18 @@ const ProductDetailModal = ({ show, onClose, product }) => {
 
         <div className="flex flex-col md:flex-row gap-6 items-center">
           <div className="flex-shrink-0 w-full md:w-1/2">
-            <img
-              src={product.image || 'https://placehold.co/400x400/cccccc/333333?text=No+Image'}
-              alt={product.name || 'Product image'}
-              className="w-full h-auto object-cover rounded-lg shadow-md"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://placehold.co/400x400/cccccc/333333?text=No+Image";
-              }}
-            />
+            {imageUrl(product.imageUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl(product.imageUrl)}
+                alt={product.name || 'Product image'}
+                className="w-full h-auto object-cover rounded-lg shadow-md"
+              />
+            ) : (
+              <div className="w-full aspect-square bg-gradient-to-br from-amber-50 to-gray-100 rounded-lg flex items-center justify-center text-amber-500 text-5xl font-black">
+                QSL
+              </div>
+            )}
           </div>
           <div className="flex-grow w-full md:w-1/2">
             <p className="text-md text-gray-600">
@@ -170,20 +173,24 @@ const ProductGrid = () => {
         >
           {products.map((product) => (
             <div
-              key={product._id}
+              key={product.id}
               className="bg-white rounded-lg shadow-lg shadow-amber-500/50 overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-300 flex flex-col"
               onClick={() => handleCardClick(product)}
             >
               <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-                <img
-                  src={product.image || 'https://placehold.co/400x400/cccccc/333333?text=No+Image'}
-                  alt={product.name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://placehold.co/400x400/cccccc/333333?text=No+Image";
-                  }}
-                />
+                {imageUrl(product.imageUrl) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={imageUrl(product.imageUrl)}
+                    alt={product.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-gray-100 flex flex-col items-center justify-center text-center px-4">
+                    <span className="text-amber-500 text-3xl font-black tracking-tight">QSL</span>
+                    <span className="mt-1 text-gray-500 text-sm font-semibold">{product.category || 'Product'}</span>
+                  </div>
+                )}
               </div>
               <div className="p-5 flex-grow flex flex-col justify-between">
                 <div>

@@ -2,16 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The site is a light-only design (every section uses white backgrounds), so we
+   pin dark text on a light ground regardless of the OS colour scheme. The old
+   prefers-color-scheme:dark override flipped --foreground to near-white, which
+   made inherited-colour headings invisible on the white sections (and turned some
+   section backgrounds black). Removing it fixes contrast across the whole site. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { createMetadata } from "@/utils/seo";
 import AIChatWidget from "@/components/AIChatWidget"; // make sure this path is correct
@@ -47,9 +48,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <script src="/config.js" async></script>
-      </head>
+      {/* Load runtime config BEFORE the app JS so window.ENV (the API base URL)
+          is set before any code reads it. beforeInteractive avoids the async race
+          that otherwise falls back to the localhost default in production. */}
+      <Script src="/config.js" strategy="beforeInteractive" />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <AIChatWidget /> {/* ✅ Global chatbot */}

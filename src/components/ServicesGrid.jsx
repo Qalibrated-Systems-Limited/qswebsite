@@ -35,22 +35,20 @@ const ServicesGrid = () => { // Renamed component from HomeServices to ServicesG
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredServices.map((service, index) => (
-            <div 
-              key={index} 
-              className="bg-white p-8 rounded-lg shadow-md border border-gray-200 flex flex-col items-center text-center transition duration-200 hover:shadow-xl hover:scale-[1.02]"
+            <a
+              key={index}
+              href={service.link}
+              className="bg-white p-8 rounded-lg shadow-md border border-gray-200 flex flex-col items-center text-center transition duration-200 hover:shadow-xl hover:scale-[1.02] cursor-pointer"
             >
               <div className="bg-amber-100 rounded-full p-4 mb-6">
                 <service.icon className="h-12 w-12 text-amber-500" />
               </div>
-              <h4 className="font-bold text-xl mb-2">{service.title}</h4>
+              <h4 className="font-bold text-xl mb-2 text-gray-900">{service.title}</h4>
               <p className="text-gray-600 text-sm mb-6 flex-grow">{service.description}</p>
-              <a 
-                href={service.link} 
-                className="text-amber-500 font-semibold hover:underline flex items-center"
-              >
+              <span className="text-amber-500 font-semibold hover:underline flex items-center">
                 Learn More <ArrowRight className="h-4 w-4 ml-1" />
-              </a>
-            </div>
+              </span>
+            </a>
           ))}
         </div>
 
