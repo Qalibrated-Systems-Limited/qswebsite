@@ -12,16 +12,33 @@ import Newsletter from '@/components/ContactCallToAction';
 //   title    – category name
 //   tagline  – short line under the title
 //   intro    – 1–2 sentence paragraph
-//   groups   – [{ heading, badge, items: ["🔧 Item", ...] }]
+//   groups   – [{ heading, badge, id, items: ["🔧 Item", ...]
+//                 | [{ label: "🔧 Item", href: "/weighing/portable-axle" }] }]
+//     id   – optional anchor so navbar dropdowns can deep-link to a group
+//     item – a plain "emoji Name" string, or { label, href } to make the card
+//            a link to an existing detail page
 /**
  * @param {{
  *   title?: string,
  *   tagline?: string,
  *   intro?: string,
- *   groups?: Array<{ heading?: string, badge?: string, items?: string[] }>,
+ *   groups?: Array<{
+ *     heading?: string,
+ *     badge?: string,
+ *     id?: string,
+ *     items?: Array<string | { label: string, href?: string }>,
+ *   }>,
  * }} props
  */
 export default function ServiceCategory({ title, tagline, intro, groups = [] }) {
+  const cardClass =
+    'bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex items-center gap-3 hover:shadow-md hover:border-amber-300 transition';
+  const renderCardInner = (label) => (
+    <>
+      <span className="text-2xl leading-none">{label.split(' ')[0]}</span>
+      <span className="font-semibold text-gray-800">{label.split(' ').slice(1).join(' ')}</span>
+    </>
+  );
   return (
     <>
       <Navbar />
@@ -53,7 +70,7 @@ export default function ServiceCategory({ title, tagline, intro, groups = [] }) 
       <main className="bg-gray-50">
         <section className="max-w-6xl mx-auto px-6 py-16 space-y-12">
           {groups.map((group, gi) => (
-            <div key={gi}>
+            <div key={gi} id={group.id} className="scroll-mt-32">
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <h2 className="text-2xl font-extrabold text-gray-900">{group.heading}</h2>
                 {group.badge && (
@@ -63,15 +80,19 @@ export default function ServiceCategory({ title, tagline, intro, groups = [] }) 
                 )}
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map((item, ii) => (
-                  <div
-                    key={ii}
-                    className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex items-center gap-3 hover:shadow-md hover:border-amber-300 transition"
-                  >
-                    <span className="text-2xl leading-none">{item.split(' ')[0]}</span>
-                    <span className="font-semibold text-gray-800">{item.split(' ').slice(1).join(' ')}</span>
-                  </div>
-                ))}
+                {group.items.map((item, ii) => {
+                  const label = typeof item === 'string' ? item : item.label;
+                  const href = typeof item === 'string' ? null : item.href;
+                  return href ? (
+                    <Link key={ii} href={href} className={cardClass}>
+                      {renderCardInner(label)}
+                    </Link>
+                  ) : (
+                    <div key={ii} className={cardClass}>
+                      {renderCardInner(label)}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
