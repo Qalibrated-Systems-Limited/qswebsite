@@ -21,11 +21,13 @@ function Navbar() {
   const [weighingDropdownOpen, setWeighingDropdownOpen] = useState(false);
   const [calibrationDropdownOpen, setCalibrationDropdownOpen] = useState(false);
   const [automationDropdownOpen, setAutomationDropdownOpen] = useState(false);
+  const [solutionsDropdownOpen, setSolutionsDropdownOpen] = useState(false);
 
   const closeAllDropdowns = () => {
     setWeighingDropdownOpen(false);
     setCalibrationDropdownOpen(false);
     setAutomationDropdownOpen(false);
+    setSolutionsDropdownOpen(false);
   };
 
   const handleDropdownToggle = (setter, isOpen) => {
@@ -73,6 +75,17 @@ function Navbar() {
       ],
       dropdownState: automationDropdownOpen,
       setDropdownState: setAutomationDropdownOpen,
+    },
+    {
+      name: 'Solutions',
+      path: '#',
+      dropdown: [
+        { name: 'Filling & Packaging', path: '/filling-packaging' },
+        { name: 'Construction & Engineering', path: '/construction-engineering' },
+        { name: 'ICT & Software', path: '/ict-software' },
+      ],
+      dropdownState: solutionsDropdownOpen,
+      setDropdownState: setSolutionsDropdownOpen,
     },
     { name: 'Catalogue', path: '/catalogue' },
     { name: 'Announcements', path: '/announcements' },
