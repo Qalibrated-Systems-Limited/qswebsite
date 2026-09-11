@@ -49,8 +49,9 @@ export const authAPI = {
 export const productsAPI = {
   getAll: () => apiClient.get('/products'),
   getById: (id) => apiClient.get(`/products/${id}`),
-  create: (productData) => apiClient.post('/products', productData),
-  update: (id, productData) => apiClient.put(`/products/${id}`, productData),
+  // create/update take a FormData (optional image upload) — sent as multipart.
+  create: (formData) => apiClient.post('/products', formData, multipart),
+  update: (id, formData) => apiClient.put(`/products/${id}`, formData, multipart),
   delete: (id) => apiClient.delete(`/products/${id}`),
 };
 

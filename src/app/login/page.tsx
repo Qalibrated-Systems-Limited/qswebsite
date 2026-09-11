@@ -31,6 +31,7 @@ export default function Login() {
 
       if (res.data.token) {
         localStorage.setItem("authToken", res.data.token);
+        if (res.data.user) localStorage.setItem("user", JSON.stringify(res.data.user));
         router.push("/dashboard");
       } else {
         setError("Login failed: No token received.");
@@ -54,14 +55,14 @@ export default function Login() {
         {/* Back Button */}
         <button
           onClick={() => router.push("/")}
-          className="absolute top-4 left-4 flex items-center text-theme-600 hover:text-theme-700"
+          className="absolute top-4 left-4 flex items-center text-gray-800 hover:text-amber-700"
         >
           <ArrowLeft className="w-5 h-5 mr-1" />
           Back
         </button>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold text-center text-theme-600 mb-6">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Login
         </h2>
 
@@ -82,7 +83,7 @@ export default function Login() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-theme-500 focus:outline-none"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none"
             />
           </div>
 
@@ -98,7 +99,7 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-theme-500 focus:outline-none pr-10"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none pr-10"
               />
               <button
                 type="button"
@@ -127,7 +128,7 @@ export default function Login() {
         {/* Sign Up */}
         <p className="mt-6 text-center text-sm text-gray-700">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-theme-500 hover:underline">
+          <Link href="/signup" className="text-amber-600 hover:underline">
             Sign up
           </Link>
         </p>

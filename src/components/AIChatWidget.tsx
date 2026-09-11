@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
+// Keep only the most recent messages so the chat never balloons in localStorage,
+// and only send a short recent window to the API (smaller, cheaper requests).
+const MAX_STORED = 20;
+const SEND_WINDOW = 10;
+
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>(
@@ -11,18 +16,27 @@ export default function AIChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Load messages from localStorage on mount
+  // Load the recent messages from localStorage on mount (guarded + trimmed)
   useEffect(() => {
-    const storedMessages = localStorage.getItem("chat_messages");
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
+    try {
+      const storedMessages = localStorage.getItem("chat_messages");
+      if (storedMessages) {
+        const parsed = JSON.parse(storedMessages);
+        if (Array.isArray(parsed)) setMessages(parsed.slice(-MAX_STORED));
+      }
+    } catch {
+      // ignore corrupt/blocked storage
     }
   }, []);
 
-  // ✅ Save messages whenever they change
+  // Save only the most recent messages so storage never grows unbounded
   useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem("chat_messages", JSON.stringify(messages));
+    try {
+      if (messages.length > 0) {
+        localStorage.setItem("chat_messages", JSON.stringify(messages.slice(-MAX_STORED)));
+      }
+    } catch {
+      // ignore storage errors (private mode, quota)
     }
   }, [messages]);
 
@@ -38,7 +52,7 @@ export default function AIChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages.slice(-SEND_WINDOW) }),
       });
 
       const data = await res.json();

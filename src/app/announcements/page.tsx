@@ -61,8 +61,8 @@ export default function AnnouncementsPage() {
     <>
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative h-[52vh] min-h-[360px] w-full flex items-center justify-center text-center">
+      {/* Hero (pt-28 clears the fixed navbar so the heading isn't covered) */}
+      <section className="relative h-[52vh] min-h-[420px] w-full flex items-center justify-center text-center pt-28 pb-10">
         <Image src={heroNews} alt="Qalibrated Systems announcements" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-black/65" />
         <motion.div initial="hidden" animate="visible" variants={fadeUp} className="relative z-10 px-6 max-w-3xl">

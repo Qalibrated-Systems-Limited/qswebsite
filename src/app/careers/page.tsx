@@ -104,8 +104,8 @@ export default function CareersPage() {
     <>
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center text-center">
+      {/* Hero (pt-28 clears the fixed navbar so the badge/heading aren't covered) */}
+      <section className="relative h-[60vh] min-h-[460px] w-full flex items-center justify-center text-center pt-28 pb-10">
         <Image src={heroCareers} alt="Careers at Qalibrated Systems Limited" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-black/65" />
         <motion.div initial="hidden" animate="visible" variants={fadeUp} className="relative z-10 px-6 max-w-3xl">
