@@ -34,7 +34,7 @@ type Job = {
   requirements?: string | null;
 };
 
-const APPLY_EMAIL = 'info@qalibrated.co.ke'; // change to careers@… once that inbox exists
+const APPLY_EMAIL = 'recruitment@qalibrated.com';
 
 const benefits = [
   {
