@@ -4,17 +4,24 @@ import React, { useEffect, useState } from 'react';
 import { Star, X } from 'lucide-react';
 
 // ── Set this to your Google "write a review" link ──────────────────────────
-// Get it from your Google Business Profile: "Ask for reviews" → copy the
-// g.page/r/… link and paste it here (recommended). Until then this opens your
-// Google listing where visitors can still click "Write a review".
-const GOOGLE_REVIEW_URL =
-  'https://search.google.com/local/writereview?placeid=REPLACE_WITH_PLACE_ID';
-const FALLBACK_REVIEW_URL =
-  'https://www.google.com/search?q=Qalibrated+Systems+Limited+Nairobi+reviews';
+// BEST: open your Google Business Profile → "Ask for reviews" → copy the
+// short g.page/r/… link and paste it here. That opens the write-a-review box
+// directly. Until you set it, the fallback below opens your Google MAPS
+// listing (with your reviews + the "Write a review" button).
+//
+//   const GOOGLE_REVIEW_URL = 'https://g.page/r/XXXXXXXXXXXX/review';
+//
+const GOOGLE_REVIEW_URL = 'REPLACE_WITH_G_PAGE_LINK';
 
-const reviewUrl = GOOGLE_REVIEW_URL.includes('REPLACE_WITH_PLACE_ID')
-  ? FALLBACK_REVIEW_URL
-  : GOOGLE_REVIEW_URL;
+// Fallback: your listing on Google Maps (reviews are shown there).
+const FALLBACK_REVIEW_URL =
+  'https://www.google.com/maps/search/?api=1&query=' +
+  encodeURIComponent('Qalibrated Systems Limited, Mombasa Road, Nairobi');
+
+const reviewUrl =
+  GOOGLE_REVIEW_URL && !GOOGLE_REVIEW_URL.startsWith('REPLACE_')
+    ? GOOGLE_REVIEW_URL
+    : FALLBACK_REVIEW_URL;
 
 // Shown once per browser session, after the visitor has spent a little time on
 // the site — a gentle nudge, not a nag.
