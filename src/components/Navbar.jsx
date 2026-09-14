@@ -122,13 +122,13 @@ function Navbar() {
       </div>
 
       {/* Main Nav */}
-      <nav className="bg-white shadow py-4 px-4 sm:px-6 flex items-center justify-between gap-x-4 relative z-40">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+      <nav className="bg-white shadow py-4 px-4 sm:px-6 flex items-center gap-x-6 lg:gap-x-8 relative z-40">
+        <Link href="/" className="flex items-center shrink-0">
           <img src={logo.src} alt="QSL Logo" className="h-9 md:h-10 w-auto" />
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden xl:flex gap-x-4 2xl:gap-x-6 items-center font-semibold text-black text-[15px] 2xl:text-lg">
+        {/* Desktop Navigation — links sit next to the logo; CTA floats right */}
+        <div className="hidden xl:flex flex-1 gap-x-4 2xl:gap-x-6 items-center font-semibold text-black text-[15px] 2xl:text-lg">
           {navItems.map((item, index) => (
             <div
               key={index}
@@ -174,13 +174,13 @@ function Navbar() {
               )}
             </div>
           ))}
-          <Link href="/dashboard" className="ml-1 px-4 py-2 bg-amber-400 text-black rounded-full font-bold text-sm 2xl:text-base whitespace-nowrap hover:opacity-90 transition shrink-0">
+          <Link href="/dashboard" className="ml-auto px-4 py-2 bg-amber-400 text-black rounded-full font-bold text-sm 2xl:text-base whitespace-nowrap hover:opacity-90 transition shrink-0">
             Get Started
           </Link>
         </div>
 
         {/* Hamburger Menu for Mobile / tablet */}
-        <div className="xl:hidden">
+        <div className="xl:hidden ml-auto">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-black focus:outline-none p-1"
