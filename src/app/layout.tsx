@@ -4,6 +4,8 @@ import Script from "next/script";
 import "./globals.css";
 import { createMetadata } from "@/utils/seo";
 import AIChatWidget from "@/components/AIChatWidget"; // make sure this path is correct
+import AdPopup from "@/components/AdPopup";
+import ReviewPopup from "@/components/ReviewPopup";
 
 // ✅ Define fonts
 const geistSans = Geist({
@@ -144,6 +146,8 @@ export default function RootLayout({
         />
         {children}
         <AIChatWidget /> {/* ✅ Global chatbot */}
+        <AdPopup /> {/* Active ads from the dashboard, shown as a popup */}
+        <ReviewPopup /> {/* Gentle once-per-session Google review nudge */}
       </body>
     </html>
   );
