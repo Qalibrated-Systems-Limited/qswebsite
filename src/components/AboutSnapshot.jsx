@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Award, Users, ArrowRight } from 'lucide-react';
-import aboutImage from '../assets/team.jpg';
+import aboutImage from '../assets/about.jpg';
 
 const AboutSnapshot = () => {
   return (
