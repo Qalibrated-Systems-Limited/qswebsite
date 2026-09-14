@@ -1,7 +1,7 @@
 import config from './config';
 
 // Get the proper URL for Open Graph images (runtime replaceable)
-export const getOGImageUrl = (imagePath = '/og-image.svg') => {
+export const getOGImageUrl = (imagePath = '/og-image.png') => {
   // Use placeholder that will be replaced at runtime via entrypoint, fallback to env vars for local dev
   let baseUrl = '__NEXT_PUBLIC_ASSETS_URL__';
   
@@ -53,15 +53,25 @@ export const createMetadata = ({
   description,
   keywords,
   path = '',
-  image = '/og-image.svg'
+  image = '/og-image.png'
 }) => {
   const fullUrl = getSiteUrl(path);
   const imageUrl = getOGImageUrl(image);
-  
+  let metadataBase;
+  try {
+    metadataBase = new URL(getSiteUrl());
+  } catch {
+    metadataBase = new URL('https://qalibrated.com');
+  }
+
   return {
+    metadataBase,
     title,
     description,
     keywords,
+    alternates: {
+      canonical: fullUrl,
+    },
     openGraph: {
       title,
       description,
@@ -72,7 +82,7 @@ export const createMetadata = ({
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: 'Qalibrated Systems Limited Logo',
+          alt: 'Qalibrated Systems Limited — precision weighing, calibration & automation',
         }
       ],
       locale: 'en_US',
@@ -83,8 +93,9 @@ export const createMetadata = ({
       title,
       description,
       images: [imageUrl],
+      site: '@qalibrated',
       creator: '@qalibrated',
     },
-    robots: 'index, follow',
+    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
   };
 };

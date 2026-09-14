@@ -6,7 +6,7 @@ export const metadata = {
     description: 'Login to your Qalibrated Systems Limited account to access your dashboard, manage products, view analytics, and monitor your weighing and automation systems.',
     keywords: 'login, dashboard access, user account, Qalibrated login, system management, weighing system dashboard',
     path: '/login',
-    image: '/og-image.svg',
+    image: '/og-image.png',
   }),
   robots: {
     index: false,

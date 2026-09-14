@@ -5,7 +5,7 @@ export const metadata = createMetadata({
   description: 'Portable weighing scales and axle weighers for mobile and temporary weighing applications. Accurate, durable, and easy-to-use weighing solutions for various industries.',
   keywords: 'portable weighers, axle weighers, mobile weighing, portable scales, temporary weighing, vehicle axle weighing, portable weighing systems',
   path: '/weighing/portable-axle',
-  image: '/og-image.svg',
+  image: '/og-image.png',
 });
 
 export default function PortableAxleLayout({

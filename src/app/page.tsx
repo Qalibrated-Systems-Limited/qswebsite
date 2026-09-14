@@ -16,7 +16,7 @@ export const metadata = createMetadata({
   description: 'Leading provider of innovative weighing, calibration, and automation systems in Kenya. Professional solutions for commercial weighing, building management, and intelligent transport systems.',
   keywords: 'weighing systems, calibration services, automation solutions, weighbridges, industrial scales, building management, transport systems, Kenya, Nairobi',
   path: '/',
-  image: '/og-image.svg',
+  image: '/og-image.png',
 });
 
 export default function Home() {

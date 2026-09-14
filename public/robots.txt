@@ -1,19 +1,12 @@
 User-agent: *
 Allow: /
 
-# Sitemap location
-Sitemap: https://qalibrated.co.ke/sitemap.xml
+# Keep private / non-content areas out of the index
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+Disallow: /login
+Disallow: /signup
 
-# Disallow admin and private areas
-Disallow: /dashboard/
-Disallow: /admin/
-Disallow: /api/
-
-# Allow all weighing, calibration, and automation pages
-Allow: /weighing/
-Allow: /calibration/
-Allow: /automation/
-Allow: /about/
-Allow: /services/
-Allow: /contact/
-Allow: /catalogue/
+# Sitemap
+Sitemap: https://qalibrated.com/sitemap.xml

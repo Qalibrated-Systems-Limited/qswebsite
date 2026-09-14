@@ -5,6 +5,33 @@ const nextConfig: NextConfig = {
   // Enable standalone output for optimized Docker builds
   output: "standalone",
 
+  // Don't advertise the framework/version
+  poweredByHeader: false,
+
+  // Security headers applied to every response (the gateway terminates TLS and
+  // forwards these to the browser).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-DNS-Prefetch-Control", value: "on" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(self)",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
+  },
+
   webpack(config) {
     // Safely find the default file-loader for SVGs
     const fileLoaderRule = config.module.rules.find((rule: RuleSetRule) => {
