@@ -6,6 +6,25 @@ export default function WeighingPage() {
       title="Weighing Systems"
       tagline="Precision Weighing"
       intro="From truck weighbridges and axle weighers to laboratory balances and hazardous-area scales — a complete weighing range, verified and supported across Kenya and East Africa."
+      path="/weighing"
+      faqs={[
+        {
+          q: 'Where can I buy a weighbridge in Kenya?',
+          a: 'Qalibrated Systems Limited supplies, installs and maintains truck weighbridges, axle weighers and industrial scales across Kenya from our Nairobi base (QSL Centre, off Mombasa Road), with service teams reaching Mombasa and Kisumu.',
+        },
+        {
+          q: 'Are your weighbridges legal for trade?',
+          a: 'Yes. We supply legal-for-trade weighing systems and provide KENAS-accredited (ISO/IEC 17025:2017) calibration and verification so your weighbridge meets Kenyan legal-metrology requirements.',
+        },
+        {
+          q: 'Do you offer weighbridge software and automation?',
+          a: 'Yes — unmanned/automated weighbridge software with RFID, cameras, barriers and reporting that integrate with your operations.',
+        },
+        {
+          q: 'How much does a weighbridge cost in Kenya?',
+          a: 'Cost depends on capacity, platform length and level of automation. Contact us for a free site assessment and a detailed quotation.',
+        },
+      ]}
       groups={[
         {
           heading: 'Vehicle & Bulk Weighing',

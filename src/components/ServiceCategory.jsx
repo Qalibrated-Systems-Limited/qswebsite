@@ -22,6 +22,8 @@ import Newsletter from '@/components/ContactCallToAction';
  *   title?: string,
  *   tagline?: string,
  *   intro?: string,
+ *   path?: string,
+ *   faqs?: Array<{ q: string, a: string }>,
  *   groups?: Array<{
  *     heading?: string,
  *     badge?: string,
@@ -30,7 +32,7 @@ import Newsletter from '@/components/ContactCallToAction';
  *   }>,
  * }} props
  */
-export default function ServiceCategory({ title, tagline, intro, groups = [] }) {
+export default function ServiceCategory({ title, tagline, intro, path = '', faqs = [], groups = [] }) {
   const cardClass =
     'bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex items-center gap-3 hover:shadow-md hover:border-amber-300 transition';
   const renderCardInner = (label) => (
@@ -39,6 +41,41 @@ export default function ServiceCategory({ title, tagline, intro, groups = [] }) 
       <span className="font-semibold text-gray-800">{label.split(' ').slice(1).join(' ')}</span>
     </>
   );
+
+  // Structured data (production domain is fixed, so hardcoding avoids any
+  // server/client hydration mismatch on env-derived URLs). Emitted in the
+  // SSR'd HTML so crawlers read Service, Breadcrumb and FAQ schema directly.
+  const SITE = 'https://qalibrated.com';
+  const pageUrl = `${SITE}${path || ''}`;
+  const graph = [
+    {
+      '@type': 'Service',
+      name: title,
+      serviceType: title,
+      description: intro || undefined,
+      url: pageUrl,
+      areaServed: ['Kenya', 'East Africa'],
+      provider: { '@type': 'Organization', name: 'Qalibrated Systems Limited', url: SITE },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
+        { '@type': 'ListItem', position: 2, name: title, item: pageUrl },
+      ],
+    },
+  ];
+  if (faqs.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+  }
+  const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
   return (
     <>
       <Navbar />
@@ -97,6 +134,26 @@ export default function ServiceCategory({ title, tagline, intro, groups = [] }) 
             </div>
           ))}
 
+          {/* FAQ — visible content that also backs the FAQ rich-result schema */}
+          {faqs.length > 0 && (
+            <div className="border-t border-gray-200 pt-12">
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-6 text-center">
+                Frequently asked questions
+              </h2>
+              <div className="max-w-3xl mx-auto divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
+                {faqs.map((f, fi) => (
+                  <details key={fi} className="group px-5 py-4">
+                    <summary className="flex cursor-pointer items-center justify-between gap-3 font-semibold text-gray-900 list-none">
+                      {f.q}
+                      <span className="text-amber-500 transition-transform group-open:rotate-45 text-xl leading-none">+</span>
+                    </summary>
+                    <p className="mt-3 text-gray-700 leading-relaxed">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Accreditation trust line */}
           <div className="text-center border-t border-gray-200 pt-10">
             <p className="text-sm font-semibold text-gray-500">
@@ -112,6 +169,8 @@ export default function ServiceCategory({ title, tagline, intro, groups = [] }) 
       </main>
 
       <Footer />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );
 }
