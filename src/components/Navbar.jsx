@@ -127,8 +127,8 @@ function Navbar() {
           <img src={logo.src} alt="QSL Logo" className="h-9 md:h-10 w-auto" />
         </Link>
 
-        {/* Desktop Navigation — links sit next to the logo; CTA floats right */}
-        <div className="hidden xl:flex flex-1 gap-x-4 2xl:gap-x-6 items-center font-semibold text-black text-[15px] 2xl:text-lg">
+        {/* Desktop Navigation — logo left · menu centered · CTA right */}
+        <div className="hidden xl:flex flex-1 justify-center gap-x-5 2xl:gap-x-7 items-center font-semibold text-black text-[15px] 2xl:text-lg">
           {navItems.map((item, index) => (
             <div
               key={index}
@@ -174,10 +174,12 @@ function Navbar() {
               )}
             </div>
           ))}
-          <Link href="/dashboard" className="ml-auto px-4 py-2 bg-amber-400 text-black rounded-full font-bold text-sm 2xl:text-base whitespace-nowrap hover:opacity-90 transition shrink-0">
-            Get Started
-          </Link>
         </div>
+
+        {/* Get Started — right, desktop only */}
+        <Link href="/dashboard" className="hidden xl:inline-flex shrink-0 px-4 py-2 bg-amber-400 text-black rounded-full font-bold text-sm 2xl:text-base whitespace-nowrap hover:opacity-90 transition">
+          Get Started
+        </Link>
 
         {/* Hamburger Menu for Mobile / tablet */}
         <div className="xl:hidden ml-auto">
