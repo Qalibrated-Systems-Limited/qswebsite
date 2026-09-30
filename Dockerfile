@@ -44,7 +44,7 @@ COPY --from=builder /app/scripts ./scripts
 # App code stays owned by root (read-only for the server user) so a compromised
 # process can't rewrite the site. Only the runtime config file and Next's image
 # cache are writable.
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache public/config.js
+RUN chmod -R a+rX /app && mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache public/config.js
 USER nextjs
 
 # Expose port
