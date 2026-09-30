@@ -21,6 +21,8 @@ A REST API under `/api`:
 - `announcements` — news & updates (image upload).
 - `ads` — banner / sidebar / popup promotions (image upload).
 - `careers` — job openings.
+- `applications` — job applications from the Careers page (public submit; admin
+  list / preview / download / status / delete).
 
 List endpoints return only *live* content (published / open / active) to the
 public, but return **everything** when called with an admin token, so the
@@ -31,7 +33,7 @@ and served from `/uploads/*`.
 
 - **Public pages** read the API live (no redeploy to change content):
   - `/announcements` — published announcements.
-  - `/careers` — open roles (with an apply-by-email flow).
+  - `/careers` — open roles with an on-site application form (optional CV upload).
   - Products pages read `/products`.
 - **Admin dashboard** (`/dashboard`, sign in at `/login`) manages Products,
   Announcements, Careers, Ads and Users. Content is created/edited/deleted here
@@ -78,4 +80,20 @@ docker compose up -d --build   # site :3000, API :5000
 - To move to PostgreSQL later, change the `datasource` provider in
   `backend/prisma/schema.prisma` to `postgresql` and set `DATABASE_URL` — no
   application code changes are needed.
+- **Job applications.** Every role on `/careers` (plus a general application)
+  opens an application form — personal details, education, experience & skills,
+  availability — saved straight to the database. A CV is optional; when attached
+  it is stored *privately* in `CV_DIR` (default `./data/cvs`, i.e. inside
+  the `backend_data` volume — never under the public `/uploads`). Admins view them
+  in the dashboard under **Applications** (full details + CV preview): PDFs and images preview inline,
+  Word (.docx) files are rendered to HTML for preview. To keep storage small,
+  images are resized and re-encoded as WebP, PDFs are optimised with Ghostscript
+  (installed in the backend image), and PDF/DOCX files are gzip-compressed at
+  rest. Uploads are limited to 5 MB (PDF, DOCX, JPG, PNG) and 5 per IP per 10 min.
+- **Application alerts** go to `RECRUITMENT_EMAIL` (default
+  `recruitment@qalibrated.com`) — an alert with the applicant's details and a
+  link to `DASHBOARD_URL`, not the CV itself. Configure either `RESEND_API_KEY`
+  or SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, optional
+  `SMTP_SECURE`), plus `MAIL_FROM` (a sender on a verified domain). With neither
+  set, the alert is only logged and applications are still saved.
 - **Set a strong `JWT_SECRET`** in production; never ship the example value.

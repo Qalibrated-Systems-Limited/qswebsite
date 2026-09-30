@@ -91,6 +91,17 @@ export const careersAPI = {
   delete: (id) => apiClient.delete(`/careers/${id}`),
 };
 
+// Job applications — public submit (multipart with the CV file), admin-only
+// list / CV download / .docx preview / status / delete.
+export const applicationsAPI = {
+  submit: (formData) => apiClient.post('/applications', formData, { ...multipart, timeout: 60000 }),
+  getAll: () => apiClient.get('/applications'),
+  getCv: (id) => apiClient.get(`/applications/${id}/cv`, { responseType: 'blob', timeout: 60000 }),
+  getPreview: (id) => apiClient.get(`/applications/${id}/preview`, { timeout: 60000 }),
+  updateStatus: (id, status) => apiClient.patch(`/applications/${id}`, { status }),
+  delete: (id) => apiClient.delete(`/applications/${id}`),
+};
+
 // Resolve an uploaded image path (e.g. "/uploads/x.webp") to an absolute URL on
 // the API origin. Pass-through for absolute URLs; null-safe.
 export function imageUrl(pathValue) {

@@ -6,6 +6,8 @@ data/*.db
 data/*.db-journal
 *.db
 *.db-journal
+# uploaded CVs (private, runtime content)
+data/cvs/
 # uploaded media (runtime content, kept in a volume in production)
 uploads/*
 !uploads/.gitkeep

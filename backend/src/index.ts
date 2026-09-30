@@ -11,6 +11,7 @@ import productRoutes from './routes/products.js';
 import announcementRoutes from './routes/announcements.js';
 import adRoutes from './routes/ads.js';
 import careerRoutes from './routes/careers.js';
+import applicationRoutes from './routes/applications.js';
 
 dotenv.config();
 
@@ -23,6 +24,10 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
+
+// Behind the gateway/reverse proxy, take the client IP from X-Forwarded-For
+// (used by the applications rate limiter). Only private-network proxies are trusted.
+app.set('trust proxy', process.env.TRUST_PROXY || 'loopback, linklocal, uniquelocal');
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -43,6 +48,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/careers', careerRoutes);
+app.use('/api/applications', applicationRoutes);
 
 // 404
 app.use((_req, res) => {
