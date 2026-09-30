@@ -18,6 +18,17 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change-me-to-a-long-random-string}
       - PORT=5000
       - UPLOAD_DIR=/app/uploads
+      # Job applications: CVs are stored privately in the data volume.
+      - CV_DIR=/app/data/cvs
+      # Alert email for new applications (Resend or SMTP — see PLATFORM.md).
+      - RECRUITMENT_EMAIL=${RECRUITMENT_EMAIL:-recruitment@qalibrated.com}
+      - DASHBOARD_URL=${DASHBOARD_URL:-http://localhost:3000/dashboard}
+      - MAIL_FROM=${MAIL_FROM:-Qalibrated Careers <noreply@qalibrated.co.ke>}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
     volumes:
       - backend_data:/app/data
       - backend_uploads:/app/uploads

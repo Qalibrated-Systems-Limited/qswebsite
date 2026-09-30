@@ -20,6 +20,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Newsletter from '@/components/ContactCallToAction';
 import { careersAPI } from '@/utils/apiFactory';
+import CareerApplyModal from '@/components/CareerApplyModal';
 import heroCareers from '@/assets/portrait-engineers-work-hours-job-site.jpg';
 
 // Roles are managed live from the Admin dashboard (Careers) and served by the
@@ -33,8 +34,6 @@ type Job = {
   description: string;
   requirements?: string | null;
 };
-
-const APPLY_EMAIL = 'recruitment@qalibrated.com';
 
 const benefits = [
   {
@@ -64,14 +63,6 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
-function applyHref(job?: Job) {
-  const subject = job ? `Application: ${job.title}` : 'General application / CV submission';
-  const body = job
-    ? `Hello Qalibrated Systems team,%0D%0A%0D%0AI would like to apply for the ${job.title} role (${job.department}, ${job.location}).%0D%0A%0D%0APlease find my CV attached.%0D%0A%0D%0AKind regards,`
-    : `Hello Qalibrated Systems team,%0D%0A%0D%0AI would like to be considered for future opportunities. Please find my CV attached.%0D%0A%0D%0AKind regards,`;
-  return `mailto:${APPLY_EMAIL}?subject=${encodeURIComponent(subject)}&body=${body}`;
-}
-
 function requirementList(req?: string | null): string[] {
   if (!req) return [];
   return req
@@ -83,6 +74,8 @@ function requirementList(req?: string | null): string[] {
 export default function CareersPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  // undefined = form closed, null = general application, Job = a specific role.
+  const [applyTo, setApplyTo] = useState<Job | null | undefined>(undefined);
 
   useEffect(() => {
     let active = true;
@@ -213,12 +206,13 @@ export default function CareersPage() {
                             </span>
                           </div>
                         </div>
-                        <a
-                          href={applyHref(job)}
+                        <button
+                          type="button"
+                          onClick={() => setApplyTo(job)}
                           className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 text-black rounded-full font-bold hover:opacity-90 transition"
                         >
                           Apply <ArrowRight size={16} />
-                        </a>
+                        </button>
                       </div>
 
                       <p className="mt-4 text-gray-700 leading-relaxed whitespace-pre-line">{job.description}</p>
@@ -255,16 +249,17 @@ export default function CareersPage() {
             >
               <h3 className="text-2xl font-extrabold">Don’t see the right role?</h3>
               <p className="mt-3 text-gray-300 max-w-2xl mx-auto">
-                We’re always happy to hear from skilled engineers, technicians and professionals. Send us your CV and
+                We’re always happy to hear from skilled engineers, technicians and professionals. Fill in a general application and
                 we’ll keep you in mind for future opportunities.
               </p>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                <a
-                  href={applyHref()}
+                <button
+                  type="button"
+                  onClick={() => setApplyTo(null)}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-black rounded-full font-bold hover:opacity-90 transition"
                 >
-                  <Mail size={18} /> Send your CV
-                </a>
+                  <Mail size={18} /> Apply now
+                </button>
                 <Link
                   href="/contact"
                   className="inline-flex items-center gap-2 px-6 py-3 border border-white/40 text-white rounded-full font-bold hover:bg-white/10 transition"
@@ -280,6 +275,8 @@ export default function CareersPage() {
       </main>
 
       <Footer />
+
+      {applyTo !== undefined && <CareerApplyModal job={applyTo} onClose={() => setApplyTo(undefined)} />}
     </>
   );
 }

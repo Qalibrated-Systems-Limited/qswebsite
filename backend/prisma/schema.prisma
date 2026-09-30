@@ -70,4 +70,57 @@ model Career {
   isOpen       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  applications JobApplication[]
+}
+
+// An application submitted from the public Careers page form. The applicant's
+// details are stored as fields; an optional CV lives on disk in CV_DIR (private —
+// never served from /uploads) in compressed form, and only admins can fetch it
+// back through /api/applications/:id/cv.
+model JobApplication {
+  id                String   @id @default(cuid())
+  careerId          String?
+  career            Career?  @relation(fields: [careerId], references: [id], onDelete: SetNull)
+  jobTitle          String   // snapshot of the role title (or "General application")
+
+  // Personal
+  fullName          String
+  email             String
+  phone             String
+  location          String   // current town / county
+  linkedinUrl       String?
+
+  // Education
+  educationLevel    String   // Certificate | Diploma | Bachelor's | Master's | PhD | Other
+  fieldOfStudy      String
+  institution       String
+  graduationYear    Int?
+
+  // Experience
+  yearsExperience   String   // e.g. "0-1", "1-3", "3-5", "5-10", "10+"
+  currentTitle      String?
+  currentEmployer   String?
+  experienceSummary String
+  skills            String
+  certifications    String?
+
+  // Availability
+  availability      String   // Immediately | 2 weeks | 1 month | 2+ months
+  expectedSalary    String?
+  willingToTravel   Boolean  @default(false)
+
+  message           String?  // why they want the role / cover note
+  consent           Boolean  @default(false)
+
+  // Optional CV attachment
+  cvFileName        String?  // original filename as uploaded
+  cvStoredName      String?  // filename on disk inside CV_DIR
+  cvMimeType        String?  // mime type of the document as served back
+  cvGzipped         Boolean  @default(false) // stored gzip-compressed at rest
+  originalSize      Int?
+  storedSize        Int?
+
+  status            String   @default("New") // New | Reviewed | Shortlisted | Rejected
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

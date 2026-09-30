@@ -3,6 +3,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Ghostscript compresses uploaded PDF CVs (see src/utils/cvStorage.ts).
+RUN apk add --no-cache ghostscript
+
 # Install dependencies (all deps — prisma CLI and tsx are needed at runtime for
 # `prisma db push` and seeding on first boot).
 COPY package*.json ./

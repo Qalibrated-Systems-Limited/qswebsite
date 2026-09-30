@@ -8,6 +8,7 @@ import Analytics from '@/components/dashboard/Analytics';
 import ProductManagement from '@/components/dashboard/ProductManagement';
 import AnnouncementManagement from '@/components/dashboard/AnnouncementManagement';
 import CareerManagement from '@/components/dashboard/CareerManagement';
+import ApplicationManagement from '@/components/dashboard/ApplicationManagement';
 import AdManagement from '@/components/dashboard/AdManagement';
 import UserManagement from '@/components/dashboard/UserManagement';
 import MyProfile from '@/components/dashboard/MyProfile';
@@ -17,6 +18,7 @@ const TITLES: Record<string, string> = {
   products: 'Products',
   announcements: 'Announcements',
   careers: 'Careers',
+  applications: 'Job Applications',
   ads: 'Ads & Promotions',
   users: 'Users',
   profile: 'My Profile',
@@ -68,6 +70,8 @@ export default function Dashboard() {
         return <AnnouncementManagement />;
       case 'careers':
         return <CareerManagement />;
+      case 'applications':
+        return <ApplicationManagement />;
       case 'ads':
         return <AdManagement />;
       case 'users':
