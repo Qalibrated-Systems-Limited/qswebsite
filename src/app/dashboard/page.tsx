@@ -12,6 +12,7 @@ import ApplicationManagement from '@/components/dashboard/ApplicationManagement'
 import AdManagement from '@/components/dashboard/AdManagement';
 import UserManagement from '@/components/dashboard/UserManagement';
 import MyProfile from '@/components/dashboard/MyProfile';
+import { authStore } from '@/utils/apiFactory';
 
 const TITLES: Record<string, string> = {
   analytics: 'Analytics',
@@ -32,23 +33,17 @@ export default function Dashboard() {
 
   // Auth guard: the dashboard is never shown without a session — bounce to login.
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    if (!token) {
+    if (!authStore.get()) {
       router.replace('/login');
       return;
     }
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      if (u?.id) setUserId(u.id);
-    } catch {
-      // no stored user — MyProfile will simply prompt to re-login
-    }
+    const u = authStore.getUser();
+    if (u?.id) setUserId(u.id);
     setReady(true);
   }, [router]);
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    authStore.clear();
     router.replace('/login');
   };
 

@@ -42,11 +42,84 @@ function cvUpload(req: Request, res: Response, next: NextFunction) {
 
 const fmtSize = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 
-export const EDUCATION_LEVELS = ['Certificate', 'Diploma', "Bachelor's", "Master's", 'PhD', 'Other'];
+// Ordered lowest → highest (used to pick the highest qualification).
+export const EDUCATION_LEVELS = ['High School', 'Certificate', 'Diploma', "Bachelor's", "Master's", 'PhD'];
 export const EXPERIENCE_BANDS = ['0-1', '1-3', '3-5', '5-10', '10+'];
 export const AVAILABILITY = ['Immediately', '2 weeks', '1 month', '2+ months'];
 
 type Body = Record<string, string | undefined>;
+
+interface Education { level: string; institution: string; course: string | null; yearFrom: number | null; yearTo: number | null }
+interface Work { title: string; employer: string; from: string; to: string | null; current: boolean; duties: string | null }
+
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+function year(v: unknown): number | null | undefined {
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1950 && n <= new Date().getFullYear() + 6 ? n : undefined;
+}
+function parseJsonArray(raw: string | undefined): unknown[] | null {
+  try {
+    const v = JSON.parse(raw || '[]');
+    return Array.isArray(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+// Education list: 1–8 entries, at least one High School entry (mandatory).
+function parseEducation(raw: string | undefined): Education[] | string {
+  const list = parseJsonArray(raw);
+  if (!list || list.length === 0) return 'Please add your education, starting with high school.';
+  if (list.length > 8) return 'Please list at most 8 qualifications.';
+  const out: Education[] = [];
+  for (const [i, e] of list.entries()) {
+    const o = (e || {}) as Record<string, unknown>;
+    const level = str(o.level, 40);
+    const institution = str(o.institution, 150);
+    const course = str(o.course, 150) || null;
+    const yearFrom = year(o.yearFrom);
+    const yearTo = year(o.yearTo);
+    const n = `Education #${i + 1}`;
+    if (!EDUCATION_LEVELS.includes(level)) return `${n}: please choose a level.`;
+    if (!institution) return `${n}: please enter the school / institution.`;
+    if (level !== 'High School' && !course) return `${n}: please enter the course or qualification.`;
+    if (yearFrom === undefined || yearTo === undefined) return `${n}: please enter valid years.`;
+    if (!yearTo) return `${n}: please enter the year completed (or expected).`;
+    if (yearFrom && yearFrom > yearTo) return `${n}: the start year is after the end year.`;
+    out.push({ level, institution, course, yearFrom, yearTo });
+  }
+  if (!out.some((e) => e.level === 'High School')) return 'High school education is required.';
+  return out;
+}
+
+// Work history: 0–10 entries, most recent first.
+function parseWork(raw: string | undefined): Work[] | string {
+  const list = parseJsonArray(raw);
+  if (!list) return 'Invalid work experience.';
+  if (list.length > 10) return 'Please list at most 10 jobs.';
+  const out: Work[] = [];
+  for (const [i, e] of list.entries()) {
+    const o = (e || {}) as Record<string, unknown>;
+    const title = str(o.title, 150);
+    const employer = str(o.employer, 150);
+    const from = str(o.from, 7);
+    const current = o.current === true;
+    const to = current ? null : str(o.to, 7) || null;
+    const duties = str(o.duties, 2000) || null;
+    const n = `Experience #${i + 1}`;
+    if (!title || !employer) return `${n}: please enter the job title and employer.`;
+    if (!MONTH_RE.test(from)) return `${n}: please enter the start month.`;
+    if (!current && (!to || !MONTH_RE.test(to))) return `${n}: please enter the end month or tick "I currently work here".`;
+    if (to && to < from) return `${n}: the end date is before the start date.`;
+    out.push({ title, employer, from, to, current, duties });
+  }
+  // Most recent first: current roles, then by end/start date.
+  return out.sort((a, b) => Number(b.current) - Number(a.current) || (b.to || b.from).localeCompare(a.to || a.from));
+}
+
+const fmtMonth = (m: string | null) => (m ? new Date(`${m}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : '');
 
 // Trimmed text field with a length cap; returns an error string when invalid.
 function text(body: Body, key: string, label: string, max: number, required: boolean): string | null | { error: string } {
@@ -71,13 +144,7 @@ router.post('/', rateLimit, cvUpload, async (req, res) => {
       ['phone', 'Phone number', 40, true],
       ['location', 'Current location', 120, true],
       ['linkedinUrl', 'LinkedIn / portfolio link', 300, false],
-      ['educationLevel', 'Highest education level', 40, true],
-      ['fieldOfStudy', 'Field of study', 150, true],
-      ['institution', 'Institution', 150, true],
-      ['yearsExperience', 'Years of experience', 10, true],
-      ['currentTitle', 'Current / most recent job title', 150, false],
-      ['currentEmployer', 'Current / most recent employer', 150, false],
-      ['experienceSummary', 'Relevant experience', 4000, true],
+      ['yearsExperience', 'Total years of experience', 10, true],
       ['skills', 'Key skills', 2000, true],
       ['certifications', 'Certifications / licences', 2000, false],
       ['availability', 'Availability', 20, true],
@@ -93,19 +160,18 @@ router.post('/', rateLimit, cvUpload, async (req, res) => {
 
     const email = f.email!.toLowerCase();
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
-    if (!EDUCATION_LEVELS.includes(f.educationLevel!)) return res.status(400).json({ error: 'Please choose your education level.' });
+    const education = parseEducation(body.education);
+    if (typeof education === 'string') return res.status(400).json({ error: education });
+    const work = parseWork(body.experience);
+    if (typeof work === 'string') return res.status(400).json({ error: work });
+    const highest = [...education].sort(
+      (a, b) => EDUCATION_LEVELS.indexOf(b.level) - EDUCATION_LEVELS.indexOf(a.level) || (b.yearTo || 0) - (a.yearTo || 0),
+    )[0];
+    const latest = work[0];
     if (!EXPERIENCE_BANDS.includes(f.yearsExperience!)) return res.status(400).json({ error: 'Please choose your years of experience.' });
     if (!AVAILABILITY.includes(f.availability!)) return res.status(400).json({ error: 'Please choose your availability.' });
     if (f.linkedinUrl && !/^https?:\/\//i.test(f.linkedinUrl)) f.linkedinUrl = `https://${f.linkedinUrl}`;
 
-    let graduationYear: number | null = null;
-    if (body.graduationYear) {
-      graduationYear = Number(body.graduationYear);
-      const thisYear = new Date().getFullYear();
-      if (!Number.isInteger(graduationYear) || graduationYear < 1950 || graduationYear > thisYear + 6) {
-        return res.status(400).json({ error: 'Please enter a valid graduation year.' });
-      }
-    }
     if (body.consent !== 'true') {
       return res.status(400).json({ error: 'Please agree to us processing your details for recruitment.' });
     }
@@ -148,14 +214,15 @@ router.post('/', rateLimit, cvUpload, async (req, res) => {
           phone: f.phone!,
           location: f.location!,
           linkedinUrl: f.linkedinUrl,
-          educationLevel: f.educationLevel!,
-          fieldOfStudy: f.fieldOfStudy!,
-          institution: f.institution!,
-          graduationYear,
+          educationHistory: JSON.stringify(education),
+          educationLevel: highest.level,
+          fieldOfStudy: highest.course,
+          institution: highest.institution,
+          graduationYear: highest.yearTo,
+          workHistory: JSON.stringify(work),
           yearsExperience: f.yearsExperience!,
-          currentTitle: f.currentTitle,
-          currentEmployer: f.currentEmployer,
-          experienceSummary: f.experienceSummary!,
+          currentTitle: latest?.title ?? null,
+          currentEmployer: latest?.employer ?? null,
           skills: f.skills!,
           certifications: f.certifications,
           availability: f.availability!,
@@ -178,8 +245,15 @@ router.post('/', rateLimit, cvUpload, async (req, res) => {
       ['Email', email],
       ['Phone', f.phone!],
       ['Location', f.location!],
-      ['Education', `${f.educationLevel} — ${f.fieldOfStudy}, ${f.institution}${graduationYear ? ` (${graduationYear})` : ''}`],
-      ['Experience', `${f.yearsExperience} years${f.currentTitle ? ` · ${f.currentTitle}` : ''}${f.currentEmployer ? ` at ${f.currentEmployer}` : ''}`],
+      ...education.map((e, i): [string, string] => [
+        i === 0 ? 'Education' : '',
+        `${e.level}${e.course ? ` — ${e.course}` : ''}, ${e.institution} (${e.yearFrom ? `${e.yearFrom}–` : ''}${e.yearTo})`,
+      ]),
+      ['Total experience', `${f.yearsExperience} years`],
+      ...work.map((w, i): [string, string] => [
+        i === 0 ? 'Work history' : '',
+        `${w.title} at ${w.employer} (${fmtMonth(w.from)} – ${w.current ? 'present' : fmtMonth(w.to)})`,
+      ]),
       ['Availability', f.availability!],
       ['CV attached', req.file ? `${req.file.originalname} (${fmtSize(req.file.size)})` : 'No'],
     ];

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Loader2, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { applicationsAPI } from '@/utils/apiFactory';
 
 export type ApplyJob = { id: string; title: string; department: string; location: string };
@@ -11,7 +11,14 @@ const ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openx
 const ALLOWED_EXT = /\.(pdf|docx|jpe?g|png)$/i;
 
 // Keep in sync with backend/src/routes/applications.ts.
-const EDUCATION_LEVELS = ['Certificate', 'Diploma', "Bachelor's", "Master's", 'PhD', 'Other'];
+const FURTHER_LEVELS = ['Certificate', 'Diploma', "Bachelor's", "Master's", 'PhD'];
+const MAX_EDUCATION = 8;
+const MAX_JOBS = 10;
+
+type Edu = { level: string; institution: string; course: string; yearFrom: string; yearTo: string };
+type Job = { title: string; employer: string; from: string; to: string; current: boolean; duties: string };
+const newEdu = (level = ''): Edu => ({ level, institution: '', course: '', yearFrom: '', yearTo: '' });
+const newJob = (): Job => ({ title: '', employer: '', from: '', to: '', current: false, duties: '' });
 const EXPERIENCE_BANDS = [
   ['0-1', 'Less than 1 year'],
   ['1-3', '1 – 3 years'],
@@ -27,14 +34,7 @@ const EMPTY = {
   phone: '',
   location: '',
   linkedinUrl: '',
-  educationLevel: '',
-  fieldOfStudy: '',
-  institution: '',
-  graduationYear: '',
   yearsExperience: '',
-  currentTitle: '',
-  currentEmployer: '',
-  experienceSummary: '',
   skills: '',
   certifications: '',
   availability: '',
@@ -62,6 +62,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // the optional CV compressed and emails recruitment an alert.
 export default function CareerApplyModal({ job, onClose }: { job: ApplyJob | null | undefined; onClose: () => void }) {
   const [form, setForm] = useState(EMPTY);
+  // High school is always the first (mandatory) education entry.
+  const [education, setEducation] = useState<Edu[]>([newEdu('High School')]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -109,6 +112,8 @@ export default function CareerApplyModal({ job, onClose }: { job: ApplyJob | nul
       const fd = new FormData();
       if (job) fd.append('careerId', job.id);
       Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+      fd.append('education', JSON.stringify(education));
+      fd.append('experience', JSON.stringify(jobs.map((j) => ({ ...j, to: j.current ? '' : j.to }))));
       if (file) fd.append('cv', file);
       await applicationsAPI.submit(fd);
       setDone(true);
@@ -122,6 +127,12 @@ export default function CareerApplyModal({ job, onClose }: { job: ApplyJob | nul
 
   const title = job ? `Apply: ${job.title}` : 'General application';
   const thisYear = new Date().getFullYear();
+  const thisMonth = new Date().toISOString().slice(0, 7);
+
+  const updateEdu = (i: number, patch: Partial<Edu>) =>
+    setEducation((list) => list.map((e, idx) => (idx === i ? { ...e, ...patch } : e)));
+  const updateJob = (i: number, patch: Partial<Job>) =>
+    setJobs((list) => list.map((j, idx) => (idx === i ? { ...j, ...patch } : j)));
 
   return (
     <div
@@ -191,63 +202,155 @@ export default function CareerApplyModal({ job, onClose }: { job: ApplyJob | nul
             </Section>
 
             <Section title="Education">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={label}>Highest level of education *</label>
-                  <select required className={input} value={form.educationLevel} onChange={set('educationLevel')}>
-                    <option value="">Select…</option>
-                    {EDUCATION_LEVELS.map((l) => (
-                      <option key={l}>{l}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={label}>Field of study *</label>
-                  <input required maxLength={150} placeholder="e.g. Electrical Engineering" className={input} value={form.fieldOfStudy} onChange={set('fieldOfStudy')} />
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-[1fr_10rem] gap-3">
-                <div>
-                  <label className={label}>Institution *</label>
-                  <input required maxLength={150} className={input} value={form.institution} onChange={set('institution')} />
-                </div>
-                <div>
-                  <label className={label}>Year completed</label>
-                  <input type="number" min={1950} max={thisYear + 6} className={input} value={form.graduationYear} onChange={set('graduationYear')} />
-                </div>
-              </div>
+              {education.map((e, i) => {
+                const highSchool = i === 0;
+                return (
+                  <div key={i} className="rounded-xl border border-gray-200 p-4 grid gap-3 bg-gray-50/60">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-800">
+                        {highSchool ? 'High school *' : `Further education ${i}`}
+                      </span>
+                      {!highSchool && (
+                        <button
+                          type="button"
+                          onClick={() => setEducation((list) => list.filter((_, idx) => idx !== i))}
+                          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-600"
+                        >
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {!highSchool && (
+                        <div>
+                          <label className={label}>Level *</label>
+                          <select required className={input} value={e.level} onChange={(ev) => updateEdu(i, { level: ev.target.value })}>
+                            <option value="">Select…</option>
+                            {FURTHER_LEVELS.map((l) => (
+                              <option key={l}>{l}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <div className={highSchool ? 'sm:col-span-2' : ''}>
+                        <label className={label}>{highSchool ? 'High school name *' : 'Institution *'}</label>
+                        <input required maxLength={150} className={input} value={e.institution} onChange={(ev) => updateEdu(i, { institution: ev.target.value })} />
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-[1fr_7rem_7rem] gap-3">
+                      <div>
+                        <label className={label}>{highSchool ? 'Certificate & grade (e.g. KCSE, B+)' : 'Course / qualification *'}</label>
+                        <input
+                          required={!highSchool}
+                          maxLength={150}
+                          placeholder={highSchool ? 'KCSE — B+' : 'e.g. Diploma in Electrical Engineering'}
+                          className={input}
+                          value={e.course}
+                          onChange={(ev) => updateEdu(i, { course: ev.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className={label}>From</label>
+                        <input type="number" min={1950} max={thisYear + 6} placeholder="Year" className={input} value={e.yearFrom} onChange={(ev) => updateEdu(i, { yearFrom: ev.target.value })} />
+                      </div>
+                      <div>
+                        <label className={label}>To *</label>
+                        <input required type="number" min={1950} max={thisYear + 6} placeholder="Year" className={input} value={e.yearTo} onChange={(ev) => updateEdu(i, { yearTo: ev.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {education.length < MAX_EDUCATION && (
+                <button
+                  type="button"
+                  onClick={() => setEducation((list) => [...list, newEdu()])}
+                  className="justify-self-start inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800"
+                >
+                  <Plus size={16} /> Add another qualification (certificate, diploma, degree…)
+                </button>
+              )}
               <div>
                 <label className={label}>Professional certifications / licences</label>
                 <textarea rows={2} maxLength={2000} placeholder="e.g. EBK registration, ISO/IEC 17025 training, driving licence" className={input} value={form.certifications} onChange={set('certifications')} />
               </div>
             </Section>
 
-            <Section title="Experience & skills">
-              <div className="grid sm:grid-cols-3 gap-3">
-                <div>
-                  <label className={label}>Years of experience *</label>
-                  <select required className={input} value={form.yearsExperience} onChange={set('yearsExperience')}>
-                    <option value="">Select…</option>
-                    {EXPERIENCE_BANDS.map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={label}>Current / last job title</label>
-                  <input maxLength={150} className={input} value={form.currentTitle} onChange={set('currentTitle')} />
-                </div>
-                <div>
-                  <label className={label}>Current / last employer</label>
-                  <input maxLength={150} className={input} value={form.currentEmployer} onChange={set('currentEmployer')} />
-                </div>
+            <Section title="Work experience">
+              <div className="sm:w-1/2">
+                <label className={label}>Total years of experience *</label>
+                <select required className={input} value={form.yearsExperience} onChange={set('yearsExperience')}>
+                  <option value="">Select…</option>
+                  {EXPERIENCE_BANDS.map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div>
-                <label className={label}>Relevant work experience *</label>
-                <textarea required rows={4} maxLength={4000} placeholder="Roles held, key responsibilities and achievements relevant to this position" className={input} value={form.experienceSummary} onChange={set('experienceSummary')} />
-              </div>
+              {jobs.length === 0 && (
+                <p className="text-sm text-gray-500">No jobs added yet. Add each position you have held, most recent first.</p>
+              )}
+              {jobs.map((j, i) => (
+                <div key={i} className="rounded-xl border border-gray-200 p-4 grid gap-3 bg-gray-50/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-gray-800">Job {i + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => setJobs((list) => list.filter((_, idx) => idx !== i))}
+                      className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-600"
+                    >
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className={label}>Job title *</label>
+                      <input required maxLength={150} className={input} value={j.title} onChange={(ev) => updateJob(i, { title: ev.target.value })} />
+                    </div>
+                    <div>
+                      <label className={label}>Employer *</label>
+                      <input required maxLength={150} className={input} value={j.employer} onChange={(ev) => updateJob(i, { employer: ev.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                    <div>
+                      <label className={label}>From *</label>
+                      <input required type="month" max={thisMonth} className={input} value={j.from} onChange={(ev) => updateJob(i, { from: ev.target.value })} />
+                    </div>
+                    <div>
+                      <label className={label}>To {j.current ? '' : '*'}</label>
+                      <input
+                        required={!j.current}
+                        disabled={j.current}
+                        type="month"
+                        min={j.from || undefined}
+                        max={thisMonth}
+                        className={`${input} disabled:bg-gray-100 disabled:text-gray-400`}
+                        value={j.current ? '' : j.to}
+                        onChange={(ev) => updateJob(i, { to: ev.target.value })}
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-800 pb-2.5">
+                      <input type="checkbox" checked={j.current} onChange={(ev) => updateJob(i, { current: ev.target.checked })} />
+                      I currently work here
+                    </label>
+                  </div>
+                  <div>
+                    <label className={label}>Key responsibilities &amp; achievements</label>
+                    <textarea rows={3} maxLength={2000} className={input} value={j.duties} onChange={(ev) => updateJob(i, { duties: ev.target.value })} />
+                  </div>
+                </div>
+              ))}
+              {jobs.length < MAX_JOBS && (
+                <button
+                  type="button"
+                  onClick={() => setJobs((list) => [...list, newJob()])}
+                  className="justify-self-start inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800"
+                >
+                  <Plus size={16} /> {jobs.length ? 'Add another job' : 'Add a job'}
+                </button>
+              )}
               <div>
                 <label className={label}>Key skills *</label>
                 <textarea required rows={2} maxLength={2000} placeholder="e.g. load cell installation, PLC programming, AutoCAD" className={input} value={form.skills} onChange={set('skills')} />

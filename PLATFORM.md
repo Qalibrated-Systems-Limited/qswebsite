@@ -66,10 +66,23 @@ Or the whole stack with Docker:
 docker compose up -d --build   # site :3000, API :5000
 ```
 
-**Default admin (change the password after first login):**
-`admin@qalibrated.co.ke` / `Admin123!`
+**First admin:** on an empty database the seed creates `admin@qalibrated.co.ke`
+(override with `SEED_ADMIN_EMAIL`) using `SEED_ADMIN_PASSWORD`, or a random
+password printed once in the backend logs. There is no default password.
 
 ## Deploy notes
+
+- **Production (VPS):** always use the committed `docker-compose.prod.yml` with
+  the existing project name, so the same containers and data volumes are reused:
+  `docker compose -p qslsite -f docker-compose.prod.yml up -d --build`.
+  Settings live in `./.env` next to it (`chmod 600`, never committed):
+  `JWT_SECRET` (random, 64 hex chars — `openssl rand -hex 32`), the three
+  `NEXT_PUBLIC_*` URLs, plus the mail settings below. Quote any value containing
+  `#`, which otherwise starts a comment.
+- **Security:** there is no public sign-up — admins create accounts under
+  Dashboard → Users. Login is rate-limited per IP and per account; the API only
+  accepts browser requests from `CORS_ORIGINS`; the frontend container runs
+  read-only code with dropped privileges and memory/CPU limits.
 
 - `NEXT_PUBLIC_API_BASE_URL` is read by the **browser**, so in production it must
   be a public URL the visitor can reach (e.g. `https://api.qalibrated.co.ke/api`).

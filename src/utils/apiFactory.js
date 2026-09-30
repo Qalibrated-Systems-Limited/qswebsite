@@ -1,6 +1,36 @@
 import axios from 'axios';
 import config from './config';
 
+// Session token: kept in localStorage when "Remember me" is ticked, otherwise in
+// sessionStorage so it is gone when the browser closes.
+export const authStore = {
+  get() {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  },
+  getUser() {
+    if (typeof window === 'undefined') return null;
+    try {
+      return JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  },
+  set(token, user, remember) {
+    this.clear();
+    const store = remember ? localStorage : sessionStorage;
+    store.setItem('authToken', token);
+    if (user) store.setItem('user', JSON.stringify(user));
+  },
+  clear() {
+    if (typeof window === 'undefined') return;
+    for (const s of [localStorage, sessionStorage]) {
+      s.removeItem('authToken');
+      s.removeItem('user');
+    }
+  },
+};
+
 // Create axios instance with default configuration
 const apiClient = axios.create({
   baseURL: config.API_BASE_URL,
@@ -13,7 +43,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    const token = authStore.get();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,12 +58,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
-      }
+    // An expired/invalid session on an authenticated call → back to login. A
+    // failed login attempt itself is left for the login form to show.
+    const isLogin = error.config?.url?.includes('/auth/login');
+    if (error.response?.status === 401 && !isLogin && authStore.get()) {
+      authStore.clear();
+      if (typeof window !== 'undefined') window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -42,7 +72,6 @@ apiClient.interceptors.response.use(
 // API factory functions
 export const authAPI = {
   login: (credentials) => apiClient.post('/auth/login', credentials),
-  register: (userData) => apiClient.post('/auth/register', userData),
   logout: () => apiClient.post('/auth/logout'),
 };
 

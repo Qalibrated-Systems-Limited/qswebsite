@@ -90,17 +90,22 @@ model JobApplication {
   location          String   // current town / county
   linkedinUrl       String?
 
-  // Education
-  educationLevel    String   // Certificate | Diploma | Bachelor's | Master's | PhD | Other
-  fieldOfStudy      String
-  institution       String
+  // Education — full history as JSON: [{ level, institution, course, yearFrom, yearTo }]
+  // (high school is always the first entry). The columns below summarise the
+  // highest qualification for listing/filtering.
+  educationHistory  String?
+  educationLevel    String?  // highest: High School | Certificate | Diploma | Bachelor's | Master's | PhD
+  fieldOfStudy      String?
+  institution       String?
   graduationYear    Int?
 
-  // Experience
+  // Experience — full history as JSON: [{ title, employer, from, to, current, duties }]
+  // (most recent first); currentTitle/currentEmployer summarise the latest role.
+  workHistory       String?
   yearsExperience   String   // e.g. "0-1", "1-3", "3-5", "5-10", "10+"
   currentTitle      String?
   currentEmployer   String?
-  experienceSummary String
+  experienceSummary String?
   skills            String
   certifications    String?
 

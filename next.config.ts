@@ -23,6 +23,13 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(self)",
           },
+          // Anti-clickjacking / injection hardening that doesn't restrict the
+          // scripts, styles and images the site already loads.
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+          },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",

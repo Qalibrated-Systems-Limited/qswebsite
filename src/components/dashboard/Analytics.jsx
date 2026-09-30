@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AnalyticsSection from './AnalyticsModal';
 import DashboardHeader from './DashboardHeader';
 import config from '@/utils/config';
+import { authStore } from '@/utils/apiFactory';
 
 const Analytics = () => {
   const router = useRouter();
@@ -18,7 +19,7 @@ const Analytics = () => {
     setLoading(true);
     setError('');
     
-    const token = localStorage.getItem('authToken');
+    const token = authStore.get();
     if (!token) {
       router.push('/login');
       return;
@@ -38,7 +39,7 @@ const Analytics = () => {
     } catch (err) {
       console.error('Error fetching data:', err);
       if (err.response?.status === 401 || err.response?.status === 403) {
-        localStorage.removeItem('authToken');
+        authStore.clear();
         router.push('/login');
       } else {
         setError('Failed to load data. Please check server connection.');
@@ -53,7 +54,7 @@ const Analytics = () => {
   }, [fetchData]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    authStore.clear();
     router.push('/login');
   };
 

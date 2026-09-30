@@ -1,11 +1,28 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { allow, clientIp } from '@/utils/rateLimit';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 export async function POST(req: Request) {
-  const { name, email } = await req.json();
+  if (!allow('lead', clientIp(req), 5, 10 * 60_000)) {
+    return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 });
+  }
 
-  // Save to DB or logs (optional)
-  console.log("Lead received:", name, email);
+  let name = '';
+  let email = '';
+  try {
+    const body = await req.json();
+    name = String(body?.name ?? '').trim();
+    email = String(body?.email ?? '').trim();
+  } catch {
+    return NextResponse.json({ success: false }, { status: 400 });
+  }
+  if (!name || name.length > 120 || !EMAIL_RE.test(email) || email.length > 200) {
+    return NextResponse.json({ success: false, error: 'Please enter a valid name and email' }, { status: 400 });
+  }
 
   try {
     if (process.env.RESEND_API_KEY) {
@@ -14,7 +31,7 @@ export async function POST(req: Request) {
         from: 'noreply@qalibrated.co.ke',
         to: 'info@qalibrated.co.ke',
         subject: 'New Catalogue Lead',
-        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p>`
+        html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>`,
       });
     } else {
       console.warn("⚠️ RESEND_API_KEY not set — skipping email send.");

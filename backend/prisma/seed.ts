@@ -1,22 +1,29 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const hashed = await bcrypt.hash('Admin123!', 10);
+  // First admin: only created when the database has no admin yet. The password
+  // comes from SEED_ADMIN_PASSWORD, or is generated and printed once — there is
+  // no shared default password.
+  const adminCount = await prisma.user.count({ where: { role: 'Admin' } });
+  if (adminCount === 0) {
+    const email = process.env.SEED_ADMIN_EMAIL || 'admin@qalibrated.co.ke';
+    const password = process.env.SEED_ADMIN_PASSWORD || randomBytes(12).toString('base64url');
+    await prisma.user.create({
+      data: { name: 'Admin', email, password: await bcrypt.hash(password, 12), role: 'Admin', status: 'Active' },
+    });
+    console.log(`Created first admin ${email}` + (process.env.SEED_ADMIN_PASSWORD ? '' : ` with password: ${password}  (change it after logging in)`));
+  }
 
-  await prisma.user.upsert({
-    where: { email: 'admin@qalibrated.co.ke' },
-    update: {},
-    create: {
-      name: 'Admin',
-      email: 'admin@qalibrated.co.ke',
-      password: hashed,
-      role: 'Admin',
-      status: 'Active',
-    },
-  });
+  // Loudly flag any account still using the old published default password.
+  for (const u of await prisma.user.findMany({ where: { role: 'Admin' } })) {
+    if (await bcrypt.compare('Admin123!', u.password)) {
+      console.warn(`\n!!! SECURITY WARNING: admin ${u.email} still uses the default password "Admin123!" — change it now in Dashboard → Users.\n`);
+    }
+  }
 
   const products = [
     {
@@ -79,7 +86,7 @@ async function main() {
     });
   }
 
-  console.log('Seed completed. Admin: admin@qalibrated.co.ke / Admin123!');
+  console.log('Seed completed.');
 }
 
 main()

@@ -1,0 +1,72 @@
+# Production stack on the VPS. Run ONLY with:
+#   docker compose -p qslsite -f docker-compose.prod.yml up -d --build
+# Values come from ./.env (chmod 600, never committed).
+services:
+  backend:
+    build: ./backend
+    container_name: qsl-website-backend
+    environment:
+      - DATABASE_URL=file:/app/data/qalibrated.db
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - PORT=5000
+      - UPLOAD_DIR=/app/uploads
+      # Job applications: CVs stored privately inside the data volume.
+      - CV_DIR=/app/data/cvs
+      # Only the live site may call the API from a browser.
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://qalibrated.com,https://www.qalibrated.com}
+      # Used only if the database has no admin yet (first install).
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-}
+      - RECRUITMENT_EMAIL=${RECRUITMENT_EMAIL:-recruitment@qalibrated.com}
+      - DASHBOARD_URL=${DASHBOARD_URL:-https://qalibrated.com/dashboard}
+      - MAIL_FROM=${MAIL_FROM:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+    volumes:
+      - backend_data:/app/data
+      - backend_uploads:/app/uploads
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 200
+    restart: unless-stopped
+    networks:
+      app-network: {}
+      proxy:
+        aliases: [qsl-website-api]
+
+  frontend:
+    build: .
+    container_name: qsl-website-frontend
+    depends_on: [backend]
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:?set in .env}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?set in .env}
+      - NEXT_PUBLIC_ASSETS_URL=${NEXT_PUBLIC_ASSETS_URL:?set in .env}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    # Caps the damage if the frontend is ever abused again (the miner used 2.4 GB).
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 200
+    restart: unless-stopped
+    networks:
+      app-network: {}
+      proxy:
+        aliases: [qsl-website]
+
+volumes:
+  backend_data:
+  backend_uploads:
+
+networks:
+  app-network:
+    driver: bridge
+  proxy:
+    external: true

@@ -17,9 +17,14 @@ fi
 echo "Replacing environment variables in config.js..."
 
 # Replace placeholders with actual environment variable values
-sed -i "s|__NEXT_PUBLIC_API_BASE_URL__|${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000/api}|g" "$CONFIG_FILE"
-sed -i "s|__NEXT_PUBLIC_SITE_URL__|${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}|g" "$CONFIG_FILE"
-sed -i "s|__NEXT_PUBLIC_ASSETS_URL__|${NEXT_PUBLIC_ASSETS_URL:-http://localhost:3000}|g" "$CONFIG_FILE"
+# Rewrite the file in place without sed -i (which needs a writable directory):
+# only config.js itself is writable by the server user.
+TMP_CONFIG=$(mktemp)
+sed -e "s|__NEXT_PUBLIC_API_BASE_URL__|${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000/api}|g" \
+    -e "s|__NEXT_PUBLIC_SITE_URL__|${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}|g" \
+    -e "s|__NEXT_PUBLIC_ASSETS_URL__|${NEXT_PUBLIC_ASSETS_URL:-http://localhost:3000}|g" \
+    "$CONFIG_FILE" > "$TMP_CONFIG" && cat "$TMP_CONFIG" > "$CONFIG_FILE"
+rm -f "$TMP_CONFIG"
 
 echo "Configuration updated:"
 cat "$CONFIG_FILE"

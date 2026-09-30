@@ -2,8 +2,12 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma.js';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js';
+import { MIN_PASSWORD_LENGTH } from './auth.js';
 
 const router = Router();
+const ROLES = ['Admin', 'Client', 'Guest'];
+const STATUSES = ['Active', 'Pending', 'Inactive'];
+const badPassword = (p: unknown) => typeof p !== 'string' || p.length < MIN_PASSWORD_LENGTH || p.length > 200;
 
 // All user management is admin-only.
 router.use(authenticate, requireAdmin);
@@ -47,14 +51,17 @@ router.get('/:id', async (req, res) => {
 // Create a user (admin adds a team member)
 router.post('/', async (req, res) => {
   try {
-    const { name, email, password, role = 'Client', status = 'Active' } = req.body;
+    const { name, password, role = 'Client', status = 'Active' } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'name, email and password required' });
     }
+    if (badPassword(password)) return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    if (!ROLES.includes(role) || !STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid role or status' });
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ error: 'Email already registered' });
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: { name, email, password: hashed, role, status },
     });
@@ -71,13 +78,16 @@ router.put('/:id', async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Not found' });
 
     const { name, email, role, status, password } = req.body;
+    if (role !== undefined && !ROLES.includes(role)) return res.status(400).json({ error: 'Invalid role' });
+    if (status !== undefined && !STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+    if (password && badPassword(password)) return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
     const data: Record<string, unknown> = {
       name: name ?? existing.name,
-      email: email ?? existing.email,
+      email: email ? String(email).trim().toLowerCase() : existing.email,
       role: role ?? existing.role,
       status: status ?? existing.status,
     };
-    if (password) data.password = await bcrypt.hash(password, 10);
+    if (password) data.password = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.update({ where: { id: req.params.id }, data });
     res.json(shape(user));

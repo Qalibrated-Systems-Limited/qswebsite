@@ -1,7 +1,7 @@
 # Multi-stage Docker build for Next.js app
 
 # Stage 1: Dependencies
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files and install all dependencies
@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -41,8 +41,10 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy scripts
 COPY --from=builder /app/scripts ./scripts
 
-# Set ownership
-RUN chown -R nextjs:nodejs /app
+# App code stays owned by root (read-only for the server user) so a compromised
+# process can't rewrite the site. Only the runtime config file and Next's image
+# cache are writable.
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache public/config.js
 USER nextjs
 
 # Expose port

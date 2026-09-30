@@ -6,7 +6,6 @@ Disallow: /dashboard
 Disallow: /admin
 Disallow: /api
 Disallow: /login
-Disallow: /signup
 
 # Sitemap
 Sitemap: https://qalibrated.com/sitemap.xml

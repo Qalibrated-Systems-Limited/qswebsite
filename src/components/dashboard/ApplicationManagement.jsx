@@ -34,7 +34,21 @@ function Field({ label, children }) {
   );
 }
 
+const parseList = (json) => {
+  try {
+    const v = JSON.parse(json || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+
+const fmtMonth = (m) =>
+  m ? new Date(`${m}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : '';
+
 function ApplicantDetails({ item }) {
+  const education = parseList(item.educationHistory);
+  const work = parseList(item.workHistory);
   return (
     <div className="overflow-y-auto p-5 space-y-5 border-r">
       <section>
@@ -62,25 +76,62 @@ function ApplicantDetails({ item }) {
       </section>
       <section>
         <h4 className="text-sm font-bold text-amber-700 mb-2">Education</h4>
-        <dl className="grid grid-cols-2 gap-3">
-          <Field label="Level">{item.educationLevel}</Field>
-          <Field label="Field of study">{item.fieldOfStudy}</Field>
-          <Field label="Institution">{item.institution}</Field>
-          <Field label="Year completed">{item.graduationYear}</Field>
-        </dl>
+        {education.length ? (
+          <ol className="space-y-2">
+            {education.map((e, i) => (
+              <li key={i} className="rounded-lg border border-gray-200 px-3 py-2">
+                <div className="text-sm font-semibold text-gray-800">
+                  {e.level}
+                  {e.course && <span className="font-normal text-gray-700"> — {e.course}</span>}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {e.institution} · {e.yearFrom ? `${e.yearFrom}–` : ''}
+                  {e.yearTo}
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <dl className="grid grid-cols-2 gap-3">
+            <Field label="Level">{item.educationLevel}</Field>
+            <Field label="Field of study">{item.fieldOfStudy}</Field>
+            <Field label="Institution">{item.institution}</Field>
+            <Field label="Year completed">{item.graduationYear}</Field>
+          </dl>
+        )}
         <div className="mt-3">
           <Field label="Certifications / licences">{item.certifications}</Field>
         </div>
       </section>
       <section>
-        <h4 className="text-sm font-bold text-amber-700 mb-2">Experience</h4>
-        <dl className="grid grid-cols-2 gap-3">
-          <Field label="Years">{EXPERIENCE_LABELS[item.yearsExperience] || item.yearsExperience}</Field>
-          <Field label="Current / last title">{item.currentTitle}</Field>
-          <Field label="Current / last employer">{item.currentEmployer}</Field>
+        <h4 className="text-sm font-bold text-amber-700 mb-2">Work experience</h4>
+        <dl className="mb-2">
+          <Field label="Total experience">{EXPERIENCE_LABELS[item.yearsExperience] || item.yearsExperience}</Field>
         </dl>
-        <dl className="mt-3 space-y-3">
-          <Field label="Relevant experience">{item.experienceSummary}</Field>
+        {work.length ? (
+          <ol className="space-y-2">
+            {work.map((w, i) => (
+              <li key={i} className="rounded-lg border border-gray-200 px-3 py-2">
+                <div className="text-sm font-semibold text-gray-800">
+                  {w.title} <span className="font-normal text-gray-700">at {w.employer}</span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  {fmtMonth(w.from)} – {w.current ? 'Present' : fmtMonth(w.to)}
+                </div>
+                {w.duties && <p className="mt-1 text-sm text-gray-700 whitespace-pre-line break-words">{w.duties}</p>}
+              </li>
+            ))}
+          </ol>
+        ) : item.experienceSummary ? (
+          <dl className="space-y-3">
+            <Field label="Current / last title">{item.currentTitle}</Field>
+            <Field label="Current / last employer">{item.currentEmployer}</Field>
+            <Field label="Relevant experience">{item.experienceSummary}</Field>
+          </dl>
+        ) : (
+          <p className="text-sm text-gray-500">No previous jobs listed.</p>
+        )}
+        <dl className="mt-3">
           <Field label="Key skills">{item.skills}</Field>
         </dl>
       </section>
@@ -146,7 +197,7 @@ const ApplicationManagement = () => {
         (!roleFilter || i.jobTitle === roleFilter) &&
         (!statusFilter || i.status === statusFilter) &&
         (!q ||
-          [i.fullName, i.email, i.phone, i.location, i.skills, i.fieldOfStudy, i.institution, i.currentTitle, i.currentEmployer, i.cvFileName]
+          [i.fullName, i.email, i.phone, i.location, i.skills, i.fieldOfStudy, i.institution, i.currentTitle, i.currentEmployer, i.educationHistory, i.workHistory, i.cvFileName]
             .join(' ')
             .toLowerCase()
             .includes(q)),
